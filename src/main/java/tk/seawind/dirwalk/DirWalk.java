@@ -5,10 +5,16 @@
  */
 package tk.seawind.dirwalk;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Scanner;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -23,36 +29,50 @@ public class DirWalk {
      * @param args the command line arguments
      * @throws java.io.FileNotFoundException
      * @throws java.lang.InterruptedException
+     * @throws java.io.UnsupportedEncodingException
      */
-    public static void main(String[] args) throws FileNotFoundException, InterruptedException {
+    public static void main(String[] args) throws FileNotFoundException, InterruptedException, UnsupportedEncodingException {
         ArrayList<String> urlToCheck;
+        ArrayList<String> urlToSave;
         urlToCheck = LoadUrlsFromFile();
-        CheckUrls(urlToCheck);
+        urlToSave = CheckUrls(urlToCheck);
+        urlToCheck.clear();
+        saveUrl(urlToSave);
     }
 
-    public static void CheckUrls(ArrayList<String> urlToCheck) throws InterruptedException {
-        StatusWindow statusWindow = new StatusWindow();
+    public static ArrayList<String> CheckUrls(ArrayList<String> urlToCheck) throws InterruptedException {
+        ArrayList<String> urlToSave = new ArrayList<>();
+        final StatusWindow statusWindow = new StatusWindow();
         statusWindow.setMaxNumDirectories(urlToCheck.size());
         statusWindow.setVisible(true);
+
+        ActionListener al = new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        };
+        statusWindow.setListener(al);
         int checkedUrls = 0;
         int nonExistUrls = 0;
+
         for (String next : urlToCheck) {
             File dir = new File(next);
             boolean exist = dir.isDirectory();
             if (exist) {
+                urlToSave.add(next);
             } else {
                 nonExistUrls++;
-                System.out.println("Directory: " + next + " exist: " + exist);
+                urlToSave.add("?" + next);
             }
-            //System.out.println("Directory: " + next + " exist: " + exist);
             checkedUrls++;
-            statusWindow.setCurrDirectory(checkedUrls);
             statusWindow.setCheckedUrls(checkedUrls);
             statusWindow.setNonExistUrls(nonExistUrls);
-            //Thread.sleep(100);
         }
         statusWindow.setVisible(false);
         statusWindow.dispose();
+        return urlToSave;
     }
 
     private static ArrayList<String> LoadUrlsFromFile() throws FileNotFoundException {
@@ -67,7 +87,6 @@ public class DirWalk {
             file = null;
             System.exit(0);
         }
-        //Scanner urls = new Scanner(file);
         Scanner urls = new Scanner(new FileInputStream(file), "UTF-8");
         while (urls.hasNextLine()) {
             String url;
@@ -78,6 +97,15 @@ public class DirWalk {
             }
         }
         return loadedUrls;
+    }
+
+    private static void saveUrl(ArrayList<String> urlToSave) throws FileNotFoundException, UnsupportedEncodingException {
+        try (PrintWriter out = new PrintWriter("out.txt", "UTF-8")) {
+            for (String next : urlToSave) {
+                out.println(next);
+            }
+            out.flush();
+        }
     }
 
 }
