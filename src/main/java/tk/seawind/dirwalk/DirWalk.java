@@ -10,11 +10,9 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Scanner;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -78,7 +76,7 @@ public class DirWalk {
     private static ArrayList<String> LoadUrlsFromFile() throws FileNotFoundException {
         ArrayList<String> loadedUrls = new ArrayList<>();
         JFileChooser fc = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Text files", "txt");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("search.pro", "pro");
         File file;
         fc.setFileFilter(filter);
         if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -91,7 +89,7 @@ public class DirWalk {
         while (urls.hasNextLine()) {
             String url;
             url = urls.nextLine();
-            if (url.contains("?")) {
+            if (url.contains("!") || (!urlIsValidDirectory(url))) {
             } else {
                 loadedUrls.add(url);
             }
@@ -105,7 +103,12 @@ public class DirWalk {
                 out.println(next);
             }
             out.flush();
+            out.close();
         }
+    }
+
+    private static boolean urlIsValidDirectory(String url) {
+        return url.contains("\\");
     }
 
 }
