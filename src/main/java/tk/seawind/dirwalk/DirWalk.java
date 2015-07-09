@@ -79,6 +79,7 @@ public class DirWalk {
         FileNameExtensionFilter filter = new FileNameExtensionFilter("search.pro", "pro");
         File file;
         fc.setFileFilter(filter);
+        fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
         if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
             file = fc.getSelectedFile();
         } else {
