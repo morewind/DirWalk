@@ -10,11 +10,17 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
@@ -29,13 +35,14 @@ public class DirWalk {
      * @throws java.lang.InterruptedException
      * @throws java.io.UnsupportedEncodingException
      */
-    public static void main(String[] args) throws FileNotFoundException, InterruptedException, UnsupportedEncodingException {
+    public static void main(String[] args) throws FileNotFoundException, InterruptedException, UnsupportedEncodingException, IOException {
         ArrayList<String> urlToCheck;
         ArrayList<String> urlToSave;
-        urlToCheck = LoadUrlsFromFile();
+        File file = GetFileName();
+        urlToCheck = LoadUrlsFromFile(file);
         urlToSave = CheckUrls(urlToCheck);
         urlToCheck.clear();
-        saveUrl(urlToSave);
+        saveUrl(urlToSave, file);
     }
 
     public static ArrayList<String> CheckUrls(ArrayList<String> urlToCheck) throws InterruptedException {
@@ -73,19 +80,8 @@ public class DirWalk {
         return urlToSave;
     }
 
-    private static ArrayList<String> LoadUrlsFromFile() throws FileNotFoundException {
+    private static ArrayList<String> LoadUrlsFromFile(File file) throws FileNotFoundException, IOException {
         ArrayList<String> loadedUrls = new ArrayList<>();
-        JFileChooser fc = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("search.pro", "pro");
-        File file;
-        fc.setFileFilter(filter);
-        fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
-        if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-            file = fc.getSelectedFile();
-        } else {
-            file = null;
-            System.exit(0);
-        }
         Scanner urls = new Scanner(new FileInputStream(file), "UTF-8");
         while (urls.hasNextLine()) {
             String url;
@@ -95,11 +91,14 @@ public class DirWalk {
                 loadedUrls.add(url);
             }
         }
+        String date = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
+        File newFile = new File(file + " - " + date);
+        Files.copy(file.toPath(), newFile.toPath());
         return loadedUrls;
     }
 
-    private static void saveUrl(ArrayList<String> urlToSave) throws FileNotFoundException, UnsupportedEncodingException {
-        try (PrintWriter out = new PrintWriter("out.txt", "UTF-8")) {
+    private static void saveUrl(ArrayList<String> urlToSave, File file) throws FileNotFoundException, UnsupportedEncodingException {
+        try (PrintWriter out = new PrintWriter(file, "UTF-8")) {
             for (String next : urlToSave) {
                 out.println(next);
             }
@@ -110,6 +109,22 @@ public class DirWalk {
 
     private static boolean urlIsValidDirectory(String url) {
         return url.contains("\\");
+    }
+
+    private static File GetFileName() {
+        JFileChooser fc = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("search.pro", "pro");
+        File file;
+        fc.setFileFilter(filter);
+        fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
+        if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            file = fc.getSelectedFile();
+        } else {
+            file = null;
+            JOptionPane.showMessageDialog(null, "Загрузка файла отменена!");
+            System.exit(0);
+        }
+        return file;
     }
 
 }
