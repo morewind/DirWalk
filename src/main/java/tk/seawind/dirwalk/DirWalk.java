@@ -14,11 +14,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -31,21 +32,19 @@ public class DirWalk {
 
     /**
      * @param args the command line arguments
-     * @throws java.io.FileNotFoundException
-     * @throws java.lang.InterruptedException
-     * @throws java.io.UnsupportedEncodingException
      */
-    public static void main(String[] args) throws FileNotFoundException, InterruptedException, UnsupportedEncodingException, IOException {
+    public static void main(String[] args) {
         ArrayList<String> urlToCheck;
         ArrayList<String> urlToSave;
         File file = GetFileName();
         urlToCheck = LoadUrlsFromFile(file);
+        CreateBackup(file);
         urlToSave = CheckUrls(urlToCheck);
         urlToCheck.clear();
         saveUrl(urlToSave, file);
     }
 
-    public static ArrayList<String> CheckUrls(ArrayList<String> urlToCheck) throws InterruptedException {
+    public static ArrayList<String> CheckUrls(ArrayList<String> urlToCheck) {
         ArrayList<String> urlToSave = new ArrayList<>();
         final StatusWindow statusWindow = new StatusWindow();
         statusWindow.setMaxNumDirectories(urlToCheck.size());
@@ -80,30 +79,55 @@ public class DirWalk {
         return urlToSave;
     }
 
-    private static ArrayList<String> LoadUrlsFromFile(File file) throws FileNotFoundException, IOException {
-        ArrayList<String> loadedUrls = new ArrayList<>();
-        Scanner urls = new Scanner(new FileInputStream(file), "UTF-8");
-        while (urls.hasNextLine()) {
-            String url;
-            url = urls.nextLine();
-            if (url.contains("!") || (!urlIsValidDirectory(url))) {
-            } else {
-                loadedUrls.add(url);
+    private static ArrayList<String> LoadUrlsFromFile(File file) {
+        try {
+            ArrayList<String> loadedUrls = new ArrayList<>();
+            Scanner urls = new Scanner(new FileInputStream(file), "UTF-8");
+            while (urls.hasNextLine()) {
+                String url;
+                url = urls.nextLine();
+                if (url.contains("!") || (!urlIsValidDirectory(url))) {
+                } else {
+                    loadedUrls.add(url);
+                }
             }
+            return loadedUrls;
+        } catch (FileNotFoundException ex) {
+            JOptionPane.showMessageDialog(null, "Файл " + file + " не найден или невозможно прочитать!");
+            Logger.getLogger(DirWalk.class.getName()).log(Level.SEVERE, null, ex);
+            System.exit(0);
         }
-        String date = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
-        File newFile = new File(file + " - " + date);
-        Files.copy(file.toPath(), newFile.toPath());
-        return loadedUrls;
+        return null;
     }
 
-    private static void saveUrl(ArrayList<String> urlToSave, File file) throws FileNotFoundException, UnsupportedEncodingException {
+    private static void CreateBackup(File file) {
+        String date = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
+        File newFile = new File(file + " - " + date);
+        try {
+            Files.copy(file.toPath(), newFile.toPath());
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при создании архивной копии!");
+            Logger.getLogger(DirWalk.class.getName()).log(Level.SEVERE, null, ex);
+            System.exit(0);
+        }
+        
+    }
+
+    private static void saveUrl(ArrayList<String> urlToSave, File file) {
         try (PrintWriter out = new PrintWriter(file, "UTF-8")) {
             for (String next : urlToSave) {
                 out.println(next);
             }
             out.flush();
             out.close();
+        } catch (FileNotFoundException ex) {
+            JOptionPane.showMessageDialog(null, "Файл " + file + " не найден или невозможно прочитать!");
+            Logger.getLogger(DirWalk.class.getName()).log(Level.SEVERE, null, ex);
+            System.exit(0);
+        } catch (UnsupportedEncodingException ex) {
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при выборе кодировки файла для записи!");
+            Logger.getLogger(DirWalk.class.getName()).log(Level.SEVERE, null, ex);
+            System.exit(0);
         }
     }
 
