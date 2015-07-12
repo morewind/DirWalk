@@ -18,8 +18,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -30,18 +35,37 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  */
 public class DirWalk {
 
+    private static final Logger log = Logger.getLogger(DirWalk.class.getName());
+
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        InitLogger();
+        log.log(Level.INFO, "Application started");
         ArrayList<String> urlToCheck;
         ArrayList<String> urlToSave;
         File file = GetFileName();
+        log.log(Level.INFO, "Filename entered");
         urlToCheck = LoadUrlsFromFile(file);
+        log.log(Level.INFO, "Urls to check loaded");
         CreateBackup(file);
+        log.log(Level.INFO, "Backup created");
         urlToSave = CheckUrls(urlToCheck);
         urlToCheck.clear();
         saveUrl(urlToSave, file);
+        log.log(Level.INFO, "Checked urls saved");
+    }
+
+    private static void InitLogger() {
+        Handler logHandler = null;
+        try {
+            logHandler = new FileHandler("./dirwalk.log");
+            logHandler.setFormatter(new SimpleFormatter());
+        } catch (IOException | SecurityException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+        log.addHandler(logHandler);
     }
 
     public static ArrayList<String> CheckUrls(ArrayList<String> urlToCheck) {
@@ -94,7 +118,7 @@ public class DirWalk {
             return loadedUrls;
         } catch (FileNotFoundException ex) {
             JOptionPane.showMessageDialog(null, "Файл " + file + " не найден или невозможно прочитать!");
-            Logger.getLogger(DirWalk.class.getName()).log(Level.SEVERE, null, ex);
+            log.log(Level.SEVERE, null, ex);
             System.exit(0);
         }
         return null;
@@ -107,10 +131,9 @@ public class DirWalk {
             Files.copy(file.toPath(), newFile.toPath());
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "Произошла ошибка при создании архивной копии!");
-            Logger.getLogger(DirWalk.class.getName()).log(Level.SEVERE, null, ex);
+            log.log(Level.SEVERE, null, ex);
             System.exit(0);
         }
-        
     }
 
     private static void saveUrl(ArrayList<String> urlToSave, File file) {
@@ -122,11 +145,11 @@ public class DirWalk {
             out.close();
         } catch (FileNotFoundException ex) {
             JOptionPane.showMessageDialog(null, "Файл " + file + " не найден или невозможно прочитать!");
-            Logger.getLogger(DirWalk.class.getName()).log(Level.SEVERE, null, ex);
+            log.log(Level.SEVERE, null, ex);
             System.exit(0);
         } catch (UnsupportedEncodingException ex) {
             JOptionPane.showMessageDialog(null, "Произошла ошибка при выборе кодировки файла для записи!");
-            Logger.getLogger(DirWalk.class.getName()).log(Level.SEVERE, null, ex);
+            log.log(Level.SEVERE, null, ex);
             System.exit(0);
         }
     }
