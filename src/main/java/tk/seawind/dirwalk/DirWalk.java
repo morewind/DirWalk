@@ -85,14 +85,20 @@ public class DirWalk {
         int checkedUrls = 0;
         int nonExistUrls = 0;
 
-        for (String next : urlToCheck) {
-            File dir = new File(next);
-            boolean exist = dir.isDirectory();
-            if (exist) {
-                urlToSave.add(next);
+        for (String url : urlToCheck) {
+            File dir = new File(url);
+            if (url.contains("!") || (url.trim().isEmpty())) {
+                urlToSave.add(url);
             } else {
-                nonExistUrls++;
-                urlToSave.add("?" + next);
+                if (urlIsValidDirectory(url)) {
+                    boolean exist = dir.isDirectory();
+                    if (exist) {
+                        urlToSave.add(url);
+                    } else {
+                        nonExistUrls++;
+                        urlToSave.add("?" + url);
+                    }
+                }
             }
             checkedUrls++;
             statusWindow.setCheckedUrls(checkedUrls);
@@ -104,24 +110,20 @@ public class DirWalk {
     }
 
     private static ArrayList<String> LoadUrlsFromFile(File file) {
+        ArrayList<String> loadedUrls = new ArrayList<>();
         try {
-            ArrayList<String> loadedUrls = new ArrayList<>();
             Scanner urls = new Scanner(new FileInputStream(file), "UTF-8");
             while (urls.hasNextLine()) {
                 String url;
                 url = urls.nextLine();
-                if (url.contains("!") || (!urlIsValidDirectory(url))) {
-                } else {
-                    loadedUrls.add(url);
-                }
+                loadedUrls.add(url);
             }
-            return loadedUrls;
         } catch (FileNotFoundException ex) {
             JOptionPane.showMessageDialog(null, "Файл " + file + " не найден или невозможно прочитать!");
             log.log(Level.SEVERE, null, ex);
             System.exit(0);
         }
-        return null;
+        return loadedUrls;
     }
 
     private static void CreateBackup(File file) {
