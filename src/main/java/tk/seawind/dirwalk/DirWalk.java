@@ -19,10 +19,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.logging.FileHandler;
-import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import javax.swing.JFileChooser;
@@ -96,7 +94,6 @@ public class DirWalk {
                         urlToSave.add(url);
                     } else {
                         nonExistUrls++;
-                        urlToSave.add("?" + url);
                     }
                 }
             }
@@ -104,8 +101,8 @@ public class DirWalk {
             statusWindow.setCheckedUrls(checkedUrls);
             statusWindow.setNonExistUrls(nonExistUrls);
         }
-        statusWindow.setVisible(false);
-        statusWindow.dispose();
+        //statusWindow.setVisible(false);
+        //statusWindow.dispose();
         return urlToSave;
     }
 
